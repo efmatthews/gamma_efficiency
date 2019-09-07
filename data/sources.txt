@@ -1,0 +1,31 @@
+Sources used to collect calibration spectrum:
+
+Th-228:
+	- 10.15 uCi
+	- June 1, 2010
+	- ID: 1415-83 Isotope Products Laboratories
+
+Ba-133:
+	- 10.57 uCi
+	- March 15, 2012
+	- ID: 1576-42-1 Isotope Products Laboratories
+
+Am-241:
+	- 10. uCi
+	- August 1, 2010
+	- ID: 1442-92-2 Isotope Products Laboratories
+
+Cs-137:
+	- 10.20 uCi
+	- June 1, 2013
+	- ID: 1636-3-1 Isotope Products Laboratories
+
+Eu-152:
+	- 9.533 uCi
+	- March 15, 2012
+	- ID: 1576-42-4 Isotope Products Laboratories
+
+Co-60:
+	- 10.52 uCi
+	- June 1, 2013
+	- ID: 1676-34-2 Isotope Products Laboratories
