@@ -14,6 +14,7 @@ from math import log as ln
 from math import isnan
 from scipy.special import erfc
 import numpy
+numpy.random.seed(0)
 from scipy.optimize import curve_fit
 import scipy.optimize
 numpy.warnings.filterwarnings('ignore')
