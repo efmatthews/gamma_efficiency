@@ -24,6 +24,54 @@ numpy.warnings.filterwarnings('ignore')
 
 #Functions
 #-------------------------------------------------------------------------------------
+def energy_cal(x,B0,B1):
+	"""
+	Function for linear energy calibration
+	x = ADC channel number
+	B0 = y-intercept of calibration
+	B1 = slope of calibration
+	return is energy that the ADC channel number corresponds to
+	"""
+	return B0 + B1*x
+
+def energy_cal_inv(E,B0,B1):
+	"""
+	Function for inverted linear energy calibration
+	E = ADC channel number
+	B0 = y-intercept of calibration
+	B1 = slope of calibration
+	return is ADC channel number corresponding to E
+	"""
+	return (E - B0) / B1
+
+def energy_cal_fit(centroids,energies):
+	"""
+	Function to fit data to energy_cal
+	centroids = the centroid ADC number of peaks
+	energies = the known energy of those peaks
+	"""
+	guess = [ 0.0, (energies[1]-energies[0])/(centroids[1]-centroids[0]) ]
+	B,B_cov = curve_fit(energy_cal,centroids,energies,p0=guess)
+
+	return list(B)
+
+def energy_cal_fit_cov(centroids,energies,centroids_unc,energies_unc,trials=1000):
+	"""
+	Function to obtain MC covariance matrix for energy_cal_fit
+	centroids = the centroid ADC number of peaks
+	energies = the known energy of those peaks
+	centroids_unc = uncertainties in the centroid ADC number of peaks
+	energies_unc = uncertainties in the known energy of those peaks
+	"""
+	results = numpy.zeros( (2,trials) )
+	for i in range(0,trials):
+		centroids_vard = numpy.random.normal( centroids, centroids_unc )
+		energies_vard = numpy.random.normal( energies, energies_unc )
+		B = energy_cal_fit( centroids_vard, energies_vard )
+		results[:,i] = B
+	B_cov = numpy.cov( results )
+	return B_cov
+
 def poly5(x,B0,B1,B2,B3,B4):
 	"""
 	Function for 5-degree polynomial
@@ -203,11 +251,11 @@ def gauss_gauss_gauss_poly_fit(data,window_left,window_right,guess_override=[Non
 
 	return res
 
-def plot_spectrum(binned,energy_cal=None,display=True,file_out=None,dpi=500,fmt='eps',axis=None,logscale=False,lines=None,labels=None):
+def plot_spectrum(binned,energy_cal_in=None,display=True,file_out=None,dpi=500,fmt='eps',axis=None,logscale=False,lines=None,labels=None):
 	"""
 	function to plot binned energy spectra
 	binned = binned energy data
-	energy_cal = energy calibration to apply to data, if provided plots are given in terms of energy
+	energy_cal_in = energy calibration to apply to data, if provided plots are given in terms of energy
 	display = boolean to decide whether or not to class plt.show()
 	file_out = location of output file to write image to
 	dpi = resolution of output image
@@ -225,16 +273,16 @@ def plot_spectrum(binned,energy_cal=None,display=True,file_out=None,dpi=500,fmt=
 	x.append( len(binned) )
 	y.append( 0 )
 
-	if( energy_cal != None ):
+	if( energy_cal_in != None ):
 		for i in range(0,len(x)):
-			x[i] = energy_cal_func(x[i],*energy_cal)
+			x[i] = energy_cal(x[i],*energy_cal_in)
 
-	if( (axis != None) and (energy_cal == None) ):
+	if( (axis != None) and (energy_cal_in == None) ):
 		x = x[axis[0]:axis[1]]
 		y = y[axis[0]:axis[1]]
-	elif( (axis != None) and (energy_cal != None) ):
-		lower = int( energy_cal_inv(axis[0],*energy_cal) )*2 + 1
-		upper = int( energy_cal_inv(axis[1],*energy_cal) )*2 + 1
+	elif( (axis != None) and (energy_cal_in != None) ):
+		lower = int( energy_cal_inv(axis[0],*energy_cal_in) )*2 + 1
+		upper = int( energy_cal_inv(axis[1],*energy_cal_in) )*2 + 1
 		if(lower < 0):
 			lower = 0
 		x = x[lower:upper]
@@ -253,7 +301,7 @@ def plot_spectrum(binned,energy_cal=None,display=True,file_out=None,dpi=500,fmt=
 
 	if( labels != None ):
 		plt.legend()
-	if( energy_cal == None ):
+	if( energy_cal_in == None ):
 		plt.xlabel( 'Channel No.' )
 	else:
 		plt.xlabel( 'Energy (keV)' )
@@ -267,11 +315,11 @@ def plot_spectrum(binned,energy_cal=None,display=True,file_out=None,dpi=500,fmt=
 
 
 
-def plot_spectra(binneds,energy_cal=None,display=True,file_out=None,dpi=500,fmt='eps',axis=None,logscale=False,labels=None):
+def plot_spectra(binneds,energy_cal_in=None,display=True,file_out=None,dpi=500,fmt='eps',axis=None,logscale=False,labels=None):
 	"""
 	function to plot n binned energy spectra
 	binned = binned energy data
-	energy_cal = energy calibration to apply to data, if provided plots are given in terms of energy
+	energy_cal_in = energy calibration to apply to data, if provided plots are given in terms of energy
 	display = boolean to decide whether or not to class plt.show()
 	file_out = location of output file to write image to
 	dpi = resolution of output image
@@ -294,16 +342,16 @@ def plot_spectra(binneds,energy_cal=None,display=True,file_out=None,dpi=500,fmt=
 		x.append( len(binned) )
 		y.append( 0 )
 
-		if( energy_cal != None ):
+		if( energy_cal_in != None ):
 			for i in range(0,len(x)):
-				x[i] = energy_cal_func(x[i],*energy_cal)
+				x[i] = energy_cal_func(x[i],*energy_cal_in)
 
-		if( (axis != None) and (energy_cal == None) ):
+		if( (axis != None) and (energy_cal_in == None) ):
 			x = x[axis[0]:axis[1]]
 			y = y[axis[0]:axis[1]]
-		elif( (axis != None) and (energy_cal != None) ):
-			lower = int( energy_cal_inv(axis[0],*energy_cal) )*2 + 1
-			upper = int( energy_cal_inv(axis[1],*energy_cal) )*2 + 1
+		elif( (axis != None) and (energy_cal_in != None) ):
+			lower = int( energy_cal_inv(axis[0],*energy_cal_in) )*2 + 1
+			upper = int( energy_cal_inv(axis[1],*energy_cal_in) )*2 + 1
 			if(lower < 0):
 				lower = 0
 			x = x[lower:upper]
@@ -322,7 +370,7 @@ def plot_spectra(binneds,energy_cal=None,display=True,file_out=None,dpi=500,fmt=
 
 	if( labels != None ):
 		plt.legend()
-	if( energy_cal == None ):
+	if( energy_cal_in == None ):
 		plt.xlabel( 'Channel No.' )
 	else:
 		plt.xlabel( 'Energy (keV)' )
