@@ -251,6 +251,20 @@ def gauss_gauss_gauss_poly_fit(data,window_left,window_right,guess_override=[Non
 
 	return res
 
+def gauss_int(B0,B1,B2,B3):
+	"""
+	Function for definite integral of a tailed Gaussian peak
+	B0 is magnitude of peak
+	B1 is centroid of peak
+	B2 is standard deviation of peak
+	B3 is the "beta" parameter for the tail, see GF3 Radware
+	return is a number of counts (float)
+	"""
+	gauss = numpy.sqrt(2.0 * pi) * B0 / numpy.sqrt( 1.0 / B2**2.0 )
+	tail = 2.0 * B0 * B3 * numpy.exp( -0.5 * (B1**2.0 / B2**2.0) )
+
+	return gauss + tail
+
 def plot_spectrum(binned,energy_cal_in=None,display=True,file_out=None,dpi=500,fmt='eps',axis=None,logscale=False,lines=None,labels=None):
 	"""
 	function to plot binned energy spectra
