@@ -98,7 +98,7 @@ def gauss_poly(x,B0,B1,B2,B3,B4,B5,B6,B7,B8):
 	bg = B4 + B5*x + B6*numpy.power(x,2) + B7*numpy.power(x,3) + B8*numpy.power(x,4)
 	return gauss + bg
 
-def gauss_poly_fit(data,window_left,window_right):
+def gauss_poly_fit(data,window_left,window_right,guess_override=[None,None,None,None,None,None,None,None,None]):
 	"""
 	Function to fit data to gauss_poly
 	data = list of ints which is ADC count data
@@ -118,6 +118,11 @@ def gauss_poly_fit(data,window_left,window_right):
 	sigma_guess = sqrt( numpy.average( (x_data-centroid_guess)**2.0, weights=y_data ) )
 	beta_guess = sigma_guess/2.0
 	guess = [ mag_guess, centroid_guess, sigma_guess, beta_guess, yint_guess, slope_guess, 0.0, 0.0, 0.0 ]
+	
+	for i in range(0,len(guess_override)):
+		if( guess_override[i] != None ):
+			guess[i] = guess_override[i]
+
 	bound_by = ( [0.0,0.0,0.0,0.0,0.0,-numpy.inf,-numpy.inf,-numpy.inf,-numpy.inf], [numpy.inf,numpy.inf,numpy.inf,numpy.inf,numpy.inf,numpy.inf,numpy.inf,numpy.inf,numpy.inf] )
 	sigmas = numpy.sqrt( y_data )
 	sigmas[numpy.isnan(sigmas)]=1.0
@@ -264,6 +269,29 @@ def gauss_int(B0,B1,B2,B3):
 	tail = 2.0 * B0 * B3 * numpy.exp( -0.5 * (B1**2.0 / B2**2.0) )
 
 	return gauss + tail
+
+def logpoly_eff_err(E,B_poly,B_poly_cov,h=1e-5):
+	"""
+	Function for general error propagation formula to obtain uncertainty at a point from the covariance matrix
+	E is the energy at which to calculate the uncertainty in the efficiency
+	B_poly is a list of 5 logpoly_eff fit parameters
+	B_poly_cov is covariance matrix of B_poly parameters
+	return is uncertainty in efficiency at E
+	"""
+	ders = []
+	ders.append( numpy.ones( (1,len(E)) )[0] )
+	ders.append( E )
+	ders.append( numpy.power(E,2.0) )
+	ders.append( numpy.power(E,3.0) )
+	ders.append( numpy.power(E,4.0) )
+
+	unc = numpy.zeros( (1,len(E)) )[0]
+	for i in range(0,5):
+		for j in range(0,5):
+			unc += ders[i] * ders[j] * B_poly_cov[i,j]
+	unc = numpy.sqrt( unc )
+
+	return unc
 
 def plot_spectrum(binned,energy_cal_in=None,display=True,file_out=None,dpi=500,fmt='eps',axis=None,logscale=False,lines=None,labels=None):
 	"""
