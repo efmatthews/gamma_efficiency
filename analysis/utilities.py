@@ -270,6 +270,73 @@ def gauss_int(B0,B1,B2,B3):
 
 	return gauss + tail
 
+def physical_eff1(E,B0,B1,B2,B3,B4):
+	"""
+	Function to calculate the energy-dependent efficiency
+	E is the gamma energy
+	B0-B4 are the fit parameters
+	return is efficiency at E
+	"""
+	return B0 * numpy.exp( -B1 * E**B2 ) * ( 1.0 - numpy.exp( -B3 * E**B4 ) )
+
+def physical_eff1_fit(E_data,eff_data,niter=500,Ns=20,guess=[6e-4,4.6,1.32,1.0,1.0],method='differential_evolution'):
+	"""
+	Function to fit efficiency calibration given by physical_eff1
+	E_data = list of gamma energy data
+	eff_data = list of efficiency data
+	"""
+	numpy.random.seed(0)
+
+	#Make an initial guess
+	B0_guess = max(eff_data)
+
+	if( method == 'differential_evolution' ):
+		bound_by = [ (B0_guess/10.0, B0_guess*10.0), (0.0,5.0), (0.0,5.0), (0.0,5.0), (0.0,5.0) ]
+		diff = lambda B: numpy.sum( numpy.divide( ( physical_eff1(E_data,*B) - numpy.array(eff_data) )**2.0 , numpy.array(eff_data) ) )
+		B = scipy.optimize.differential_evolution( diff, bound_by ).x
+		B = list(B)
+
+	elif( method == 'basinhopping' ):
+		#bound_by = ( [0.0,0.0,0.0,0.0,0.0], [0.5,numpy.inf,numpy.inf,numpy.inf,numpy.inf] )
+		diff = lambda B: numpy.sum( numpy.divide( ( physical_eff1(E_data,*B) - numpy.array(eff_data) )**2.0 , numpy.array(eff_data) ) )
+		B = scipy.optimize.basinhopping( diff, guess, niter=niter ).x 
+		B = list(B)
+
+	elif( method == 'shgo' ):
+		bound_by = [ (B0_guess/10.0, B0_guess*10.0), (0.0,5.0), (0.0,5.0), (0.0,5.0), (0.0,5.0) ]
+		diff = lambda B: numpy.sum( numpy.divide( ( physical_eff1(E_data,*B) - numpy.array(eff_data) )**2.0 , numpy.array(eff_data) ) )
+		B = scipy.optimize.shgo( diff, bound_by ).x 
+		B = list(B)
+
+	else:
+		raise Exception( method + ' is not an option for minimization.' )
+
+	return B
+
+def phys_eff1_err(E,B_phys,B_phys_cov,h=1e-5):
+	"""
+	Function for general error propagation formula to obtain uncertainty at a point from the covariance matrix
+	E is the energy at which to calculate the uncertainty in the efficiency
+	B_phys is a list of 5 phys_eff1 fit parameters
+	B_phys_cov is covariance matrix of B_phys parameters
+	return is uncertainty in efficiency at E
+	"""
+	B0,B1,B2,B3,B4 = B_phys
+	ders = []
+	ders.append( numpy.exp( -B1 * E**B2 ) * ( 1.0 - numpy.exp( -B3 * E**B4 ) ) )
+	ders.append( -B0 * E**B2 * numpy.exp( -B1 * E**B2 ) * ( 1.0 - numpy.exp( -B3 * E**B4 ) ) )
+	ders.append( -B0 * B1 * E**B2 * numpy.log(E) * numpy.exp( -B1 * E**B2 ) * ( 1.0 - numpy.exp( -B3 * E**B4 ) ) )
+	ders.append( B0 * E**B4 * numpy.exp( -(B1 * E**B2) - (B3 * E**B4) ) )
+	ders.append( B0 * B3 * E**B4 * numpy.log(E) * numpy.exp( -(B1 * E**B2) - (B3 * E**B4) ) )
+
+	unc = numpy.zeros( (1,len(E)) )[0]
+	for i in range(0,5):
+		for j in range(0,5):
+			unc += ders[i] * ders[j] * B_phys_cov[i,j]
+	unc = numpy.sqrt( unc )
+
+	return unc
+
 def logpoly_eff_err(E,B_poly,B_poly_cov,h=1e-5):
 	"""
 	Function for general error propagation formula to obtain uncertainty at a point from the covariance matrix
