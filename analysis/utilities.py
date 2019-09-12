@@ -313,7 +313,7 @@ def physical_eff1_fit(E_data,eff_data,niter=500,Ns=20,guess=[6e-4,4.6,1.32,1.0,1
 
 	return B
 
-def phys_eff1_err(E,B_phys,B_phys_cov,h=1e-5):
+def physical_eff1_err(E,B_phys,B_phys_cov,h=1e-5):
 	"""
 	Function for general error propagation formula to obtain uncertainty at a point from the covariance matrix
 	E is the energy at which to calculate the uncertainty in the efficiency
@@ -337,26 +337,55 @@ def phys_eff1_err(E,B_phys,B_phys_cov,h=1e-5):
 
 	return unc
 
-def logpoly_eff_err(E,B_poly,B_poly_cov,h=1e-5):
+def physical_eff1_MCerr(E,trials_res_phys):
 	"""
-	Function for general error propagation formula to obtain uncertainty at a point from the covariance matrix
-	E is the energy at which to calculate the uncertainty in the efficiency
-	B_poly is a list of 5 logpoly_eff fit parameters
-	B_poly_cov is covariance matrix of B_poly parameters
+	Function to obtain uncertainty via MC at a point from the covariance matrix
+	E_ln is the energy at which to calculate the uncertainty in the efficiency
+	trials_res_phys is a matrix of MC fitting results
 	return is uncertainty in efficiency at E
 	"""
-	ders = []
-	ders.append( numpy.ones( (1,len(E)) )[0] )
-	ders.append( E )
-	ders.append( numpy.power(E,2.0) )
-	ders.append( numpy.power(E,3.0) )
-	ders.append( numpy.power(E,4.0) )
+	results = numpy.zeros( ( trials_res_phys.shape[1], len(E) ) )
+	for i in range(0,trials_res_phys.shape[1]):
+		results[i,:] = physical_eff1( E, *trials_res_phys[:,i] )
+	unc = numpy.std( results, axis=0 )
 
-	unc = numpy.zeros( (1,len(E)) )[0]
+	return unc
+
+def logpoly_eff_err(E_ln,B_poly_cov):
+	"""
+	Function for general error propagation formula to obtain uncertainty at a point from the covariance matrix
+	E_ln is the natural log of the energy at which to calculate the uncertainty in the efficiency
+	B_poly_cov is covariance matrix of B_poly parameters
+	return is uncertainty in efficiency at E
+	Warning: this uses the general error propagation formula which is highly insufficient for
+	rapidly changing functions much as this.
+	"""
+	ders = []
+	ders.append( numpy.ones( (1,len(E_ln)) )[0] )
+	ders.append( E_ln )
+	ders.append( numpy.power(E_ln,2.0) )
+	ders.append( numpy.power(E_ln,3.0) )
+	ders.append( numpy.power(E_ln,4.0) )
+
+	unc = numpy.zeros( (1,len(E_ln)) )[0]
 	for i in range(0,5):
 		for j in range(0,5):
 			unc += ders[i] * ders[j] * B_poly_cov[i,j]
 	unc = numpy.sqrt( unc )
+
+	return unc
+
+def logpoly_eff_MCerr(E_ln,trials_res_poly):
+	"""
+	Function to obtain uncertainty via MC at a point from the covariance matrix
+	E_ln is the natural log of the energy at which to calculate the uncertainty in the efficiency
+	trials_res_poly is a matrix of MC fitting results
+	return is uncertainty in efficiency at E
+	"""
+	results = numpy.zeros( ( trials_res_poly.shape[1], len(E_ln) ) )
+	for i in range(0,trials_res_poly.shape[1]):
+		results[i,:] = numpy.polyval( trials_res_poly[:,i], E_ln )
+	unc = numpy.std( results, axis=0 )
 
 	return unc
 
