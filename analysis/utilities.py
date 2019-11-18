@@ -392,7 +392,7 @@ def logpoly_eff_MCerr(E_ln,trials_res_poly):
 
 	return unc
 
-def plot_spectrum(binned,energy_cal_in=None,display=True,file_out=None,dpi=500,fmt='eps',axis=None,logscale=False,lines=None,labels=None):
+def plot_spectrum(binned,energy_cal_in=None,display=True,file_out=None,dpi=500,fmt='eps',axis=None,logscale=False,lines=None,labels=None,axes=None):
 	"""
 	function to plot binned energy spectra
 	binned = binned energy data
@@ -448,6 +448,10 @@ def plot_spectrum(binned,energy_cal_in=None,display=True,file_out=None,dpi=500,f
 		plt.xlabel( 'Energy (keV)' )
 
 	plt.ylabel( 'No. Counts' )
+
+	if( axes != None ):
+		plt.axis( axes )
+
 	if( not(file_out == None) ):
 		plt.savefig( file_out, dpi=dpi, format=fmt )
 	if( display ):
