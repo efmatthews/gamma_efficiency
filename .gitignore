@@ -1,0 +1,13 @@
+# Python cruft
+*.pyc
+
+# Editor cruft
+*.swp
+*.*~
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+#Jupyter notebook checkpoints
+.ipynb_checkpoints
