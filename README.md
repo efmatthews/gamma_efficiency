@@ -4,7 +4,11 @@
 
 This repo contains the reproducable workflow that was used to obtain data for the impending publication "Significance of Gamma-ray Detector Efficiency Calibration Bias on Nuclear Astrophysics and Nuclear Data Evaluations". This code and Jupyter notebook are presented so that readers may review and scrutinize the dataset and analysis for this publication. 
 
-The majority of this analysis was conducted and annotated in the Jupyter notebook `Analysis.ipynb`. Execute the following steps in order to access this notebook: 
+The majority of this analysis was conducted and annotated in the Jupyter notebook `Analysis.ipynb`. To access this notebook in a reproducable environment click the button below to go to a Binder: 
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/efmatthews/gamma_efficiency/master?filepath=Analysis.ipynb)
+
+Or execute the following steps in order to access this notebook: 
 
 * Install JupyterLab (https://jupyter.org/install). 
 
