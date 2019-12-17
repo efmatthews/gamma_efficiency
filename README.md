@@ -6,7 +6,7 @@ This repo contains the reproducable workflow that was used to obtain data for th
 
 The majority of this analysis was conducted and annotated in the Jupyter notebook `Analysis.ipynb`. To access this notebook in a reproducable environment click the button below to go to a Binder: 
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/efmatthews/gamma_efficiency/master?filepath=Analysis.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/zenodo/10.5281/zenodo.3579556/?filepath=Analysis.ipynb)
 
 Or execute the following steps in order to access this notebook: 
 
